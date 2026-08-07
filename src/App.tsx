@@ -33,10 +33,21 @@ export default function App() {
         body: JSON.stringify(requestData),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: any = null;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        if (!response.ok) {
+          throw new Error(`Server status ${response.status}: ${responseText.slice(0, 120)}`);
+        } else {
+          throw new Error("Server returned non-JSON response.");
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to generate roast.");
+        throw new Error(data.error || data.message || "Failed to generate roast.");
       }
 
       setRoastResult(data);
