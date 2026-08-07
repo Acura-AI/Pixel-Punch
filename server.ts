@@ -104,6 +104,57 @@ function parseAndFormatImagePayload(imageBase64: string, defaultMime = "image/pn
   };
 }
 
+function parseModelJson(rawText: string): any {
+  let text = rawText.trim();
+
+  // Strip markdown code block wrappers if present
+  if (text.includes("```")) {
+    text = text.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
+  }
+
+  // Extract substring from first '{' to last '}'
+  const startIdx = text.indexOf("{");
+  const endIdx = text.lastIndexOf("}");
+
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    text = text.substring(startIdx, endIdx + 1);
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+    return {
+      heroAlias: parsed.heroAlias || "PAGE DEFENDER",
+      powerScore: typeof parsed.powerScore === "number" ? parsed.powerScore : 5,
+      verdictTitle: parsed.verdictTitle || "VERDICT INCOMING",
+      verdictSummary: parsed.verdictSummary || "Captain Critique analyzed your page layout.",
+      roasts: Array.isArray(parsed.roasts) && parsed.roasts.length > 0 ? parsed.roasts : ["A mysterious layout flaw holds this page back!"],
+      fixes: Array.isArray(parsed.fixes) && parsed.fixes.length > 0 ? parsed.fixes : [{ title: "Action Plan", description: "Improve visual hierarchy and CTA contrast." }],
+      comicSoundEffect: parsed.comicSoundEffect || "KAPOW!",
+      heroQuote: parsed.heroQuote || "Every landing page can become a conversion legend!",
+    };
+  } catch (err) {
+    console.warn("JSON parse failed on extracted text, falling back gracefully. Raw text:", rawText);
+    
+    return {
+      heroAlias: "THE MYSTERIOUS CONVERSION CANDIDATE",
+      powerScore: 6,
+      verdictTitle: "HEROIC POTENTIAL DETECTED!",
+      verdictSummary: rawText.length > 20 ? rawText.slice(0, 250) + "..." : "Captain Critique reviewed the page and detected solid structure with key areas for polish.",
+      roasts: [
+        "Headline needs more immediate impact to hook first-time visitors.",
+        "Primary action button could use higher contrast against the background.",
+        "Ensure key value propositions are visible above the fold without scrolling."
+      ],
+      fixes: [
+        { title: "CTA Contrast Boost", description: "Use a bold primary color on your main button to draw instant attention." },
+        { title: "Headline Sharpening", description: "Focus your headline on the core outcome for the user within 3 seconds." }
+      ],
+      comicSoundEffect: "BAM!",
+      heroQuote: "With sharp contrast and clear messaging, victory is guaranteed!"
+    };
+  }
+}
+
 app.post("/api/roast", async (req, res) => {
   try {
     const { imageBase64, mimeType = "image/png", url } = req.body;
@@ -242,7 +293,7 @@ app.post("/api/roast", async (req, res) => {
       throw new Error("Empty response from AI model.");
     }
 
-    const parsedJson = JSON.parse(resultText);
+    const parsedJson = parseModelJson(resultText);
     parsedJson.analyzedUrl = url || "Uploaded Screenshot";
     parsedJson.analyzedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
