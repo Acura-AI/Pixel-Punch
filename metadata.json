@@ -1,0 +1,6 @@
+{
+  "name": "PixelPunch",
+  "description": "A comic-book-themed landing page roaster powered by AI. Get blunt, hilarious superhero critiques, power scores, and actionable conversion fixes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
